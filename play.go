@@ -3,11 +3,10 @@ package main
 import (
 	"fmt"
 	"image"
+	_ "image/png"
 	"math"
 	"os"
 	"time"
-
-	_ "image/png"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
@@ -15,15 +14,18 @@ import (
 )
 
 const (
-	gridBlockCountX int     = 5
-	gridBlockCountY int     = 9
-	gridBlockSize   int     = 100
+	gridBlockCountX int     = 10
+	gridBlockCountY int     = 18
+	gridBlockSize   int     = 50
 	windowSizeX     int     = gridBlockCountX * gridBlockSize
 	windowSizeY     int     = gridBlockCountY * gridBlockSize
 	fallSpeed       float64 = 2
 )
 
 func run() {
+	t := GetRandom()
+	t.Draw()
+
 	cfg := pixelgl.WindowConfig{
 		Title:  "Tetris of awesomeness!",
 		Bounds: pixel.R(0, 0, float64(windowSizeX), float64(windowSizeY)),
@@ -117,12 +119,12 @@ func run() {
 		}
 
 		// Falling active blocks
-		activeGopherY := 9 - math.Floor(fallSpeed*dt)
+		activeGopherY := float64(gridBlockCountY) - math.Floor(fallSpeed*dt)
 
 		if int(activeGopherY)-1 < 0 || stateGrid[activeGopherX][int(activeGopherY)-1] {
 			last = time.Now()
 			stateGrid[activeGopherX][int(activeGopherY)] = true
-			activeGopherY = 9
+			activeGopherY = float64(gridBlockCountY)
 		}
 
 		mat := pixel.IM

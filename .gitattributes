@@ -1,0 +1,16 @@
+# Always checkout using 'lf' line endings
+* text eol=lf
+
+# source code
+*.go text
+*.sum text
+*.mod text
+*.json text
+
+# git config
+.gitattributes text
+.gitignore text
+.gitconfig text
+
+# binary
+*.png binary
