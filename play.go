@@ -19,13 +19,16 @@ const (
 	gridBlockSize   int     = 50
 	windowSizeX     int     = gridBlockCountX * gridBlockSize
 	windowSizeY     int     = gridBlockCountY * gridBlockSize
-	fallSpeed       float64 = 2
+	fallSpeed       float64 = 0.01
+)
+
+var (
+	fallingTet  Tet
+	fallingTetX int
+	fallingTetY float64
 )
 
 func run() {
-	t := GetRandom()
-	t.Draw()
-
 	cfg := pixelgl.WindowConfig{
 		Title:  "Tetris of awesomeness!",
 		Bounds: pixel.R(0, 0, float64(windowSizeX), float64(windowSizeY)),
@@ -64,7 +67,9 @@ func run() {
 
 	stateGrid[1][1] = true
 
-	activeGopherX := 3
+	fallingTet = GetRandomTet()
+	fallingTetX = gridBlockCountX / 2
+	fallingTetY = float64(gridBlockCountY - 5)
 
 	last := time.Now()
 	for !win.Closed() {
@@ -72,7 +77,7 @@ func run() {
 
 		win.Clear(colornames.Whitesmoke)
 
-		// Wipe full rows, cascade rows above
+		// Check if row is full
 		for y := 0; y < gridBlockCountY; y++ {
 			allCurrentXTrue := true
 			for x := 0; x < gridBlockCountX; x++ {
@@ -80,6 +85,7 @@ func run() {
 					allCurrentXTrue = false
 				}
 			}
+			// If row is full, move all rows above one block down
 			if allCurrentXTrue {
 				for yy := y; yy < gridBlockCountY; yy++ {
 					for x := 0; x < gridBlockCountX; x++ {
@@ -107,31 +113,62 @@ func run() {
 			}
 		}
 
+		// Falling active blocks
 		if win.JustPressed(pixelgl.KeyLeft) {
-			if activeGopherX >= 1 {
-				activeGopherX -= 1
+			if fallingTetX >= 1 {
+				fallingTetX--
 			}
 		}
 		if win.JustPressed(pixelgl.KeyRight) {
-			if activeGopherX < gridBlockCountX-1 {
-				activeGopherX += 1
+			if (fallingTetX + fallingTet.size) < gridBlockCountX {
+				fallingTetX++
 			}
 		}
-
-		// Falling active blocks
-		activeGopherY := float64(gridBlockCountY) - math.Floor(fallSpeed*dt)
-
-		if int(activeGopherY)-1 < 0 || stateGrid[activeGopherX][int(activeGopherY)-1] {
-			last = time.Now()
-			stateGrid[activeGopherX][int(activeGopherY)] = true
-			activeGopherY = float64(gridBlockCountY)
+		if win.JustPressed(pixelgl.KeySpace) {
+			fallingTet.Rot()
 		}
 
-		mat := pixel.IM
-		mat = mat.Scaled(pixel.ZV, gridScaleFactor)
-		mat = mat.Moved(pixel.V(float64(gridBlockSize/2), float64(gridBlockSize/2)))
-		mat = mat.Moved(pixel.V(float64(activeGopherX*gridBlockSize), activeGopherY*float64(gridBlockSize)))
-		gopherColorSprite.Draw(win, mat)
+		fallingTetY -= fallSpeed * dt
+		fallingTetDrawY := int(fallingTetY)
+
+		cannotFallFurther := false
+		for m := 0; m < fallingTet.size; m++ {
+			for n := 0; n < fallingTet.size; n++ {
+				if fallingTet.mat[m][n] {
+					// Check if tet can move down
+					if fallingTetDrawY-1 < 0 || stateGrid[fallingTetX+n][fallingTetDrawY+m-1] {
+						cannotFallFurther = true
+						break
+					}
+				}
+			}
+			if cannotFallFurther {
+				break
+			}
+		}
+		if cannotFallFurther {
+			for m := 0; m < fallingTet.size; m++ {
+				for n := 0; n < fallingTet.size; n++ {
+					if fallingTet.mat[m][n] {
+						stateGrid[fallingTetX+n][fallingTetDrawY+m] = true
+					}
+				}
+			}
+			fallingTet = GetRandomTet()
+			fallingTetY = float64(gridBlockCountY - 5)
+		}
+
+		for m := 0; m < fallingTet.size; m++ {
+			for n := 0; n < fallingTet.size; n++ {
+				if fallingTet.mat[m][n] {
+					mat := pixel.IM
+					mat = mat.Scaled(pixel.ZV, gridScaleFactor)
+					mat = mat.Moved(pixel.V(float64(gridBlockSize/2), float64(gridBlockSize/2)))
+					mat = mat.Moved(pixel.V(float64((fallingTetX+n)*gridBlockSize), float64((int(fallingTetY)+m)*gridBlockSize)))
+					gopherColorSprite.Draw(win, mat)
+				}
+			}
+		}
 
 		win.Update()
 	}

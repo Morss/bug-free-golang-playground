@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Tet represents Tetromino
 type Tet struct {
 	size int
 	mat  [][]bool
@@ -16,7 +17,8 @@ var (
 	rng    = rand.New(source)
 )
 
-func GetRandom() Tet {
+// GetRandomTet returns a tetromino of a random shape type
+func GetRandomTet() Tet {
 	switch rng.Intn(7) {
 	case 0:
 		return getBlock()
@@ -34,6 +36,7 @@ func GetRandom() Tet {
 	return getT()
 }
 
+// Rot rotates the tetromino 90 degrees clockwise
 func (t *Tet) Rot() {
 	res := getSquaredBoolSlice(t.size)
 
@@ -45,6 +48,7 @@ func (t *Tet) Rot() {
 	t.mat = res
 }
 
+// Draw outputs an ascii representation of the tet to the console
 func (t *Tet) Draw() {
 	for m := t.size - 1; m > -1; m-- {
 		for n := 0; n < t.size; n++ {
