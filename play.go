@@ -14,18 +14,18 @@ import (
 )
 
 const (
-	gridBlockCountX int     = 10
-	gridBlockCountY int     = 18
-	gridBlockSize   int     = 50
-	windowSizeX     int     = gridBlockCountX * gridBlockSize
-	windowSizeY     int     = gridBlockCountY * gridBlockSize
-	fallSpeed       float64 = 0.01
+	gridBlockCountX int = 10
+	gridBlockCountY int = 18
+	gridBlockSize   int = 50
+	windowSizeX     int = gridBlockCountX * gridBlockSize
+	windowSizeY     int = gridBlockCountY * gridBlockSize
 )
 
 var (
 	fallingTet  Tet
 	fallingTetX int
 	fallingTetY float64
+	fallSpeed   float64 = 2
 )
 
 func run() {
@@ -42,13 +42,13 @@ func run() {
 	win.SetSmooth(true)
 	win.Clear(colornames.Skyblue)
 
-	gopherGreyPic, _ := loadPicture("hiking_bw.png")
-	gopherColorPic, _ := loadPicture("hiking.png")
+	blockWhitePic, _ := loadPicture("block_white.png")
+	blockColorPic, _ := loadPicture("block_blue.png")
 
-	gopherGreySprite := pixel.NewSprite(gopherGreyPic, gopherGreyPic.Bounds())
-	gopherColorSprite := pixel.NewSprite(gopherColorPic, gopherGreyPic.Bounds())
+	blockWhiteSprite := pixel.NewSprite(blockWhitePic, blockWhitePic.Bounds())
+	blockColorSprite := pixel.NewSprite(blockColorPic, blockWhitePic.Bounds())
 
-	gridScaleFactor := float64(gridBlockSize) / math.Max(gopherGreyPic.Bounds().H(), gopherGreyPic.Bounds().W())
+	gridScaleFactor := float64(gridBlockSize) / math.Max(blockWhitePic.Bounds().H(), blockWhitePic.Bounds().W())
 
 	stateGrid := make([][]bool, gridBlockCountX)
 	for col := 0; col < gridBlockCountX; col++ {
@@ -74,6 +74,7 @@ func run() {
 	last := time.Now()
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()
+		last = time.Now()
 
 		win.Clear(colornames.Whitesmoke)
 
@@ -106,9 +107,9 @@ func run() {
 				mat = mat.Moved(pixel.V(float64(gridBlockSize/2), float64(gridBlockSize/2)))
 				mat = mat.Moved(pixel.V(float64(x*gridBlockSize), float64(y*gridBlockSize)))
 				if col[y] {
-					gopherColorSprite.Draw(win, mat)
+					blockColorSprite.Draw(win, mat)
 				} else {
-					gopherGreySprite.Draw(win, mat)
+					blockWhiteSprite.Draw(win, mat)
 				}
 			}
 		}
@@ -123,6 +124,9 @@ func run() {
 			if (fallingTetX + fallingTet.size) < gridBlockCountX {
 				fallingTetX++
 			}
+		}
+		if win.JustPressed(pixelgl.KeyDown) {
+			fallSpeed = 20
 		}
 		if win.JustPressed(pixelgl.KeySpace) {
 			fallingTet.Rot()
@@ -154,6 +158,7 @@ func run() {
 					}
 				}
 			}
+			fallSpeed = 2
 			fallingTet = GetRandomTet()
 			fallingTetY = float64(gridBlockCountY - 5)
 		}
@@ -165,7 +170,7 @@ func run() {
 					mat = mat.Scaled(pixel.ZV, gridScaleFactor)
 					mat = mat.Moved(pixel.V(float64(gridBlockSize/2), float64(gridBlockSize/2)))
 					mat = mat.Moved(pixel.V(float64((fallingTetX+n)*gridBlockSize), float64((int(fallingTetY)+m)*gridBlockSize)))
-					gopherColorSprite.Draw(win, mat)
+					blockColorSprite.Draw(win, mat)
 				}
 			}
 		}
